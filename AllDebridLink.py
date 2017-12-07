@@ -1,3 +1,4 @@
+import logging as log
 import argparse
 import json
 import urllib2
@@ -6,10 +7,15 @@ import sys, getpass
 import getopt
 from os.path import expanduser
 import os.path
+from axel import axel
 
 SoftName="ppitest"
 Token=""
 tryprotect=False
+
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 
 def init(Tokenfile):
@@ -38,29 +44,29 @@ def debridlink(link):
         global tryprotect
         if Token == None:
             print "Non initialise, utiliser l option -i pour generer le Token"
+	    log.error("Not a premium user")
         else:
             try:
-                print link
-                print tryprotect
                 urlwithlink="https://api.alldebrid.com/link/infos?agent="+SoftName+"&token="+Token+"&link="+link[0]
                 reponse=requests.get(urlwithlink)
                 data = reponse.json()
-                print data
+                log.info(data)
                 if data["success"]:
                     keylist = data["infos"].keys()
                     if keylist[0] == "errorCode" and tryprotect == False:
                         tryprotect=True
-                        print "host not supported, trying to bypass protect link"
+                        log.info("host not supported, trying to bypass protect link")
                         urlwithlinkprotected="https://api.alldebrid.com/link/redirector?agent="+SoftName+"&token="+Token+"&link="+link[0]
                         reponse=requests.get(urlwithlinkprotected)
                         data = reponse.json()
                         debridlink(data["links"])
                     else:
-                        print "Create link for file:" + data["infos"]["filename"]
+                        log.info("Create link for file:" + data["infos"]["filename"])
                         urllinkdebrided = "https://api.alldebrid.com/link/unlock?agent="+SoftName+"&token="+Token+"&link="+data["infos"]["link"]
                         reponse=requests.get(urllinkdebrided)
                         data = reponse.json()
                         print data["infos"]["link"]
+			result_down = axel(str(data["infos"]["link"]))
             except:
                 print "Unexpected error:", sys.exc_info()
 
@@ -78,6 +84,7 @@ def main():
         parser = argparse.ArgumentParser(prog='AllDebrid', description = "Permet de debrider des lien via l API AllDebrid")
         parser.add_argument('-i', '--init', help="init for the first connexion with %(prog)s", action="store_true")
         parser.add_argument('-u', help="Login Premium Alldebrid")
+	parser.add_argument('-v', '--verbose', help="Verbose mode", action="store_true")
         parser.add_argument('-l' '--link', dest='link', nargs=1, help="url to debrid")
         args = parser.parse_args()
 
@@ -86,8 +93,13 @@ def main():
                 init(initfile)
                 sys.exit()
 
+	if args.verbose :
+                log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
+                log.info("Verbose Output")
+
         if args.link != None:
                 debridlink(args.link)
+
 
 
 if __name__ == "__main__":
