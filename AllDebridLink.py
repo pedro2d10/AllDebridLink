@@ -12,26 +12,6 @@ Token=""
 tryprotect=False
 
 
-def temp():
-        reponse=requests.get(UrlLogin)
-        data=reponse.json()
-
-        if data["success"]:
-                if data["user"]["isPremium"]:
-                        print "Utilisateur authentifie et premium"
-                        Token=data["token"]
-                else:
-                        print "l utilisateur n'est pas premium"
-                        sys.exit(1)
-        else:
-                print "Erreur d'authentification"
-                sys.exit()
-
-        #reponse=requests.get("https://api.alldebrid.com/link/redirector?agent="+SoftName+"&token="+Token+"&link=https://www.liens-telechargement.com/123455600123$
-        data=reponse.json()
-
-        print data
-
 def init(Tokenfile):
         Login = raw_input("Enter your Alldebrid login: \n")
         Password = getpass.getpass("Enter your password: \n")
@@ -39,14 +19,11 @@ def init(Tokenfile):
 
                 urllogin= "https://api.alldebrid.com/user/login?agent="+SoftName+"&username="+Login+"&password="+Password
                 reponse = requests.get(urllogin)
-#               print urllogin
                 data = reponse.json()
-#               print data
                 if data["success"]:
                         if data["user"]["isPremium"]:
                                 print "Utilisateur authentifie et premium"
                                 Token=data["token"]
-#                               print Token
                                 f = open(Tokenfile, 'w')
                                 f.write(str(Token))
                                 f.close()
@@ -65,9 +42,7 @@ def debridlink(link):
             try:
                 print link
                 print tryprotect
-                #urlwithlink="https://api.alldebrid.com/link/redirector?agent="+SoftName+"&token="+Token+"&link="+link[0]
                 urlwithlink="https://api.alldebrid.com/link/infos?agent="+SoftName+"&token="+Token+"&link="+link[0]
-                
                 reponse=requests.get(urlwithlink)
                 data = reponse.json()
                 print data
@@ -88,15 +63,12 @@ def debridlink(link):
                         print data["infos"]["link"]
             except:
                 print "Unexpected error:", sys.exc_info()
-            #https://api.alldebrid.com/link/redirector?agent=mySoft&token=TOKEN&link=LINK
-            
 
 def getTokenFile():
         TockenFile =  (expanduser("~") + "/.alldebrid")
         if os.path.isfile(TockenFile):
                 f = open(TockenFile, 'r')
                 tocken = f.readline()
-#               print tocken
                 return tocken
         else:
                 print "nok"
@@ -117,8 +89,6 @@ def main():
         if args.link != None:
                 debridlink(args.link)
 
-#       print initfile
-#       init(initfile)
 
 if __name__ == "__main__":
     main()
